@@ -115,8 +115,14 @@
     }
   }
 
-  // Init
+  // Init — at document_start body may not exist yet, retry on DOM ready
   recheckDomain();
+
+  document.addEventListener("DOMContentLoaded", function () {
+    recheckDomain();
+  });
+
+  window.addEventListener("load", recheckDomain);
 
   chrome.storage.onChanged.addListener(function (changes) {
     if (changes.relaxModeUntil || changes.blockedDomains) {
@@ -124,6 +130,5 @@
     }
   });
 
-  window.addEventListener("load", recheckDomain);
   setInterval(recheckDomain, 1000);
 })();

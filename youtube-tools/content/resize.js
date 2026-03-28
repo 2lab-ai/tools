@@ -16,13 +16,21 @@
   // ── Transform via <style> element ──
 
   function computeTransform(behavior, scale, ox, oy) {
-    if (behavior === "off" || scale <= 1.0) return "";
+    if (behavior === "off") return "";
     var parts = [];
+    // Offset: factor = max(1, scale-1) so pad edge always reaches video edge
+    // At 1x: factor=1 → ±50% range (allows panning even without zoom)
+    // At 2x: factor=1 → ±50% (exactly reaches edge)
+    // At 4x: factor=3 → ±150% (exactly reaches edge)
+    // At 8x: factor=7 → ±350% (exactly reaches edge)
     if (ox !== 0 || oy !== 0) {
-      parts.push("translate(" + (-ox) + "%, " + (-oy) + "%)");
+      var factor = Math.max(1, scale - 1);
+      parts.push("translate(" + (-ox * factor) + "%, " + (-oy * factor) + "%)");
     }
-    parts.push(behavior === "stretch" ? "scaleX(" + scale + ")" : "scale(" + scale + ")");
-    return parts.join(" ");
+    if (scale > 1.0) {
+      parts.push(behavior === "stretch" ? "scaleX(" + scale + ")" : "scale(" + scale + ")");
+    }
+    return parts.length > 0 ? parts.join(" ") : "";
   }
 
   function getStyleElement(id) {
@@ -37,15 +45,20 @@
   function applyTransform() {
     var style = getStyleElement(STYLE_ID);
     var isFullscreen = !!document.fullscreenElement;
+    var hasOffset = state.offsetX !== 0 || state.offsetY !== 0;
     var shouldApply =
       state.behavior !== "off" &&
-      state.scale > 1.0 &&
+      (state.scale > 1.0 || hasOffset) &&
       (!state.fullscreenOnly || isFullscreen);
 
     if (shouldApply) {
       var t = computeTransform(state.behavior, state.scale, state.offsetX, state.offsetY);
-      style.textContent =
-        "#movie_player video { transform: " + t + " !important; transform-origin: center center !important; }";
+      if (t) {
+        style.textContent =
+          "#movie_player video { transform: " + t + " !important; transform-origin: center center !important; }";
+      } else {
+        style.textContent = "";
+      }
     } else {
       style.textContent = "";
     }
@@ -108,6 +121,16 @@
     });
   }
 
+  // Scroll wheel zoom
+  function adjustScale(delta) {
+    var step = 0.05;
+    var next = state.scale + (delta > 0 ? -step : step);
+    next = Math.min(8.0, Math.max(1.0, +next.toFixed(2)));
+    if (next !== state.scale) {
+      chrome.storage.local.set({ ytResize_scale: next, ytResize_behavior: "zoom" });
+    }
+  }
+
   chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     if (message.type === "fitWidth" || message.type === "fitHeight") {
       applyFit(message.type);
@@ -115,19 +138,24 @@
     }
   });
 
-  // ── Fullscreen overlay ──
+  // ── Fullscreen overlay — bottom center, flat modern ──
 
   function injectOverlayStyle() {
     if (document.getElementById(OVERLAY_STYLE_ID)) return;
     var s = document.createElement("style");
     s.id = OVERLAY_STYLE_ID;
     s.textContent = [
-      ".yt-tools-fs { position:absolute !important; top:10px !important; right:12px !important; z-index:2147483647 !important; display:none !important; pointer-events:none !important; box-sizing:border-box !important; }",
+      // Container: bottom center
+      ".yt-tools-fs { position:absolute !important; bottom:60px !important; left:50% !important; transform:translateX(-50%) !important; z-index:2147483647 !important; display:none !important; pointer-events:none !important; }",
       ".ytp-fullscreen .yt-tools-fs { display:flex !important; }",
-      ".yt-tools-fs-bar { display:flex !important; gap:6px; opacity:0; transition:opacity .25s; pointer-events:none !important; }",
+      // Bar
+      ".yt-tools-fs-bar { display:flex !important; align-items:center !important; gap:8px !important; opacity:0; transition:opacity .25s; pointer-events:none !important; background:rgba(0,0,0,.45) !important; backdrop-filter:blur(12px) !important; -webkit-backdrop-filter:blur(12px) !important; padding:6px 12px !important; border-radius:8px !important; }",
       ".ytp-fullscreen:not(.ytp-autohide) .yt-tools-fs-bar { opacity:1 !important; pointer-events:auto !important; }",
-      ".yt-tools-fs-btn { all:initial; display:inline-block !important; background:rgba(255,255,255,.08) !important; border:1px solid rgba(255,255,255,.15) !important; color:rgba(255,255,255,.6) !important; padding:6px 14px !important; border-radius:4px !important; font:500 12px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif !important; cursor:pointer !important; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); transition:background .15s,color .15s,border-color .15s; letter-spacing:.02em !important; box-sizing:border-box !important; }",
-      ".yt-tools-fs-btn:hover { background:rgba(255,255,255,.2) !important; border-color:rgba(255,255,255,.35) !important; color:#fff !important; }",
+      // Scale label
+      ".yt-tools-fs-scale { all:initial !important; color:rgba(255,255,255,.5) !important; font:500 11px/1 -apple-system,sans-serif !important; padding:0 4px !important; min-width:36px !important; text-align:center !important; pointer-events:none !important; }",
+      // Buttons
+      ".yt-tools-fs-btn { all:initial !important; display:inline-block !important; background:rgba(255,255,255,.06) !important; border:1px solid rgba(255,255,255,.12) !important; color:rgba(255,255,255,.55) !important; padding:5px 12px !important; border-radius:5px !important; font:500 11px/1 -apple-system,sans-serif !important; cursor:pointer !important; transition:background .15s,color .15s !important; letter-spacing:.02em !important; }",
+      ".yt-tools-fs-btn:hover { background:rgba(255,255,255,.15) !important; color:#fff !important; }",
     ].join("\n");
     document.head.appendChild(s);
   }
@@ -145,32 +173,53 @@
     var bar = document.createElement("div");
     bar.className = "yt-tools-fs-bar";
 
+    // Scale label
+    var scaleLabel = document.createElement("span");
+    scaleLabel.className = "yt-tools-fs-scale";
+    scaleLabel.textContent = state.scale.toFixed(2) + "x";
+
+    // Update scale label on storage change
+    chrome.storage.onChanged.addListener(function (changes) {
+      if (changes.ytResize_scale) {
+        scaleLabel.textContent = Number(changes.ytResize_scale.newValue).toFixed(2) + "x";
+      }
+    });
+
     var btnWide = document.createElement("button");
     btnWide.className = "yt-tools-fs-btn";
     btnWide.textContent = "WideFit";
-    btnWide.addEventListener("click", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      applyFit("fitWidth");
-    });
+    btnWide.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); applyFit("fitWidth"); });
 
     var btnTall = document.createElement("button");
     btnTall.className = "yt-tools-fs-btn";
     btnTall.textContent = "TallFit";
-    btnTall.addEventListener("click", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      applyFit("fitHeight");
+    btnTall.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); applyFit("fitHeight"); });
+
+    var btnReset = document.createElement("button");
+    btnReset.className = "yt-tools-fs-btn";
+    btnReset.textContent = "Reset";
+    btnReset.addEventListener("click", function (e) {
+      e.preventDefault(); e.stopPropagation();
+      chrome.storage.local.set({ ytResize_scale: 1.0, ytResize_offsetX: 0, ytResize_offsetY: 0 });
     });
 
+    bar.appendChild(scaleLabel);
     bar.appendChild(btnWide);
     bar.appendChild(btnTall);
+    bar.appendChild(btnReset);
     container.appendChild(bar);
+
+    // Scroll wheel zoom on the overlay bar
+    bar.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      adjustScale(e.deltaY);
+    }, { passive: false });
+
     player.appendChild(container);
     return true;
   }
 
-  // Retry until #movie_player exists (used for both init and SPA nav)
   function ensureOverlayWithRetry(maxAttempts) {
     var attempts = 0;
     var max = maxAttempts || 20;

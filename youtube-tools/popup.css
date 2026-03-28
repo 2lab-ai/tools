@@ -185,15 +185,31 @@ body {
   margin-top: 4px;
 }
 
-/* ── Offset pad ── */
-.offset-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+/* ── Inline label button ── */
+.label-btn {
+  float: right;
+  padding: 1px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  border: 1px solid #333;
+  border-radius: 3px;
+  background: none;
+  color: #666;
+  cursor: pointer;
+  font-family: inherit;
+  text-transform: none;
+  letter-spacing: normal;
+  transition: all .15s;
 }
 
+.label-btn:hover {
+  border-color: #555;
+  color: #ccc;
+}
+
+/* ── Offset pad ── */
 .offset-pad {
-  flex: 1;
+  width: 100%;
   aspect-ratio: 16 / 9;
   background:
     linear-gradient(to right, transparent calc(50% - .5px), #333 calc(50% - .5px), #333 calc(50% + .5px), transparent calc(50% + .5px)),
@@ -219,23 +235,6 @@ body {
   box-shadow: 0 0 4px rgba(0, 0, 0, .5);
 }
 
-.offset-reset {
-  padding: 6px 10px;
-  font-size: 11px;
-  border: 1px solid #333;
-  border-radius: 4px;
-  background: none;
-  color: #888;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all .15s;
-  white-space: nowrap;
-}
-
-.offset-reset:hover {
-  border-color: #555;
-  color: #ccc;
-}
 
 /* ── About ── */
 .about {
