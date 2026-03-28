@@ -7,8 +7,9 @@
 </head>
 <body>
   <nav class="tabs">
-    <button class="tab active" data-tab="resize">Resize</button>
+    <button class="tab active" data-tab="resize">VidFit</button>
     <button class="tab" data-tab="shorts" disabled title="Coming soon">Shorts</button>
+    <button class="tab" data-tab="about">About</button>
   </nav>
 
   <main>
@@ -29,13 +30,27 @@
         <label class="control-label">
           Scale <span id="scaleValue">1.00x</span>
         </label>
-        <input id="scaleSlider" type="range" min="1.00" max="2.00" step="0.01" value="1.00">
+        <input id="scaleSlider" type="range" min="1.00" max="8.00" step="0.01" value="1.00">
         <div class="presets">
           <button data-scale="1.00">16:9</button>
           <button data-scale="1.13">18:9</button>
           <button data-scale="1.31">21:9</button>
           <button data-scale="1.50">24:9</button>
           <button data-scale="2.00">32:9</button>
+        </div>
+        <div class="presets fit-presets">
+          <button id="btnWideFit">WideFit</button>
+          <button id="btnHeightFit">TallFit</button>
+        </div>
+      </div>
+
+      <div id="offsetControls" class="control-group">
+        <label class="control-label">Offset</label>
+        <div class="offset-wrap">
+          <div class="offset-pad" id="offsetPad">
+            <div class="offset-dot" id="offsetDot"></div>
+          </div>
+          <button id="offsetReset" class="offset-reset" title="Reset offset">Reset</button>
         </div>
       </div>
 
@@ -49,6 +64,12 @@
 
     <section id="tab-shorts" class="tab-content">
       <p class="placeholder">Coming soon</p>
+    </section>
+
+    <section id="tab-about" class="tab-content">
+      <div class="about">
+        <a href="https://2lab.ai" target="_blank" rel="noopener">2lab.ai</a>
+      </div>
     </section>
   </main>
 

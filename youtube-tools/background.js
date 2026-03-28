@@ -2,7 +2,7 @@
 
 const SCALE_STEP = 0.01;
 const SCALE_MIN = 1.0;
-const SCALE_MAX = 2.0;
+const SCALE_MAX = 8.0;
 const DEFAULT_SCALE = 1.0;
 
 chrome.commands.onCommand.addListener(async function (command) {
@@ -27,6 +27,8 @@ chrome.runtime.onInstalled.addListener(function (details) {
       ytResize_behavior: "zoom",
       ytResize_scale: DEFAULT_SCALE,
       ytResize_fullscreenOnly: true,
+      ytResize_offsetX: 0,
+      ytResize_offsetY: 0,
     });
   }
 });

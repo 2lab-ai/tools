@@ -5,6 +5,8 @@
     behavior: "ytResize_behavior",
     scale: "ytResize_scale",
     fullscreenOnly: "ytResize_fullscreenOnly",
+    offsetX: "ytResize_offsetX",
+    offsetY: "ytResize_offsetY",
   };
 
   const DEFAULTS = { behavior: "zoom", scale: 1.0, fullscreenOnly: true };
@@ -36,7 +38,7 @@
     const slider = document.getElementById("scaleSlider");
     const scaleValue = document.getElementById("scaleValue");
     const fullscreenOnly = document.getElementById("fullscreenOnly");
-    const presetButtons = document.querySelectorAll(".presets button");
+    const presetButtons = document.querySelectorAll(".presets button[data-scale]");
     const scaleControls = document.getElementById("scaleControls");
 
     function updateSliderTrack() {
@@ -58,11 +60,14 @@
       chrome.storage.local.set({ [STORAGE_KEYS.scale]: Number(value) });
     }
 
+    var offsetControls = document.getElementById("offsetControls");
+
     function renderBehavior(value) {
       modeOff.checked = value === "off";
       modeZoom.checked = value === "zoom";
       modeStretch.checked = value === "stretch";
       scaleControls.style.display = value === "off" ? "none" : "";
+      offsetControls.style.display = value === "off" ? "none" : "";
     }
 
     function saveBehavior(value) {
@@ -79,9 +84,59 @@
       chrome.storage.local.set({ [STORAGE_KEYS.fullscreenOnly]: value });
     }
 
+    // ── Offset pad ──
+    var offsetPad = document.getElementById("offsetPad");
+    var offsetDot = document.getElementById("offsetDot");
+    var draggingOffset = false;
+
+    function renderOffset(ox, oy) {
+      offsetDot.style.left = ((ox + 50) / 100) * 100 + "%";
+      offsetDot.style.top = ((oy + 50) / 100) * 100 + "%";
+    }
+
+    function saveOffset(ox, oy) {
+      renderOffset(ox, oy);
+      chrome.storage.local.set({
+        [STORAGE_KEYS.offsetX]: ox,
+        [STORAGE_KEYS.offsetY]: oy,
+      });
+    }
+
+    function offsetFromEvent(e) {
+      var rect = offsetPad.getBoundingClientRect();
+      var x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      var y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+      return {
+        x: +((x - 0.5) * 100).toFixed(1),
+        y: +((y - 0.5) * 100).toFixed(1),
+      };
+    }
+
+    offsetPad.addEventListener("mousedown", function (e) {
+      draggingOffset = true;
+      var o = offsetFromEvent(e);
+      saveOffset(o.x, o.y);
+      e.preventDefault();
+    });
+
+    document.addEventListener("mousemove", function (e) {
+      if (!draggingOffset) return;
+      var o = offsetFromEvent(e);
+      saveOffset(o.x, o.y);
+    });
+
+    document.addEventListener("mouseup", function () {
+      draggingOffset = false;
+    });
+
+    document.getElementById("offsetReset").addEventListener("click", function () {
+      saveOffset(0, 0);
+    });
+
     // Load saved state
     chrome.storage.local.get(
-      [STORAGE_KEYS.behavior, STORAGE_KEYS.scale, STORAGE_KEYS.fullscreenOnly],
+      [STORAGE_KEYS.behavior, STORAGE_KEYS.scale, STORAGE_KEYS.fullscreenOnly,
+       STORAGE_KEYS.offsetX, STORAGE_KEYS.offsetY],
       function (result) {
         const behavior = result[STORAGE_KEYS.behavior] || DEFAULTS.behavior;
         const scale = Number(result[STORAGE_KEYS.scale]) || DEFAULTS.scale;
@@ -93,6 +148,10 @@
         renderBehavior(behavior);
         renderScale(scale);
         renderFullscreenOnly(fsOnly);
+        renderOffset(
+          Number(result[STORAGE_KEYS.offsetX]) || 0,
+          Number(result[STORAGE_KEYS.offsetY]) || 0
+        );
       }
     );
 
@@ -121,6 +180,23 @@
       });
     });
 
+    // WideFit / 세로Fit buttons
+    function sendFitMessage(type) {
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        if (tabs[0]) {
+          chrome.tabs.sendMessage(tabs[0].id, { type: type });
+        }
+      });
+    }
+
+    document.getElementById("btnWideFit").addEventListener("click", function () {
+      sendFitMessage("fitWidth");
+    });
+
+    document.getElementById("btnHeightFit").addEventListener("click", function () {
+      sendFitMessage("fitHeight");
+    });
+
     // Sync from external changes (e.g. keyboard shortcuts)
     var onStorageChanged = function (changes, area) {
       if (area !== "local") return;
@@ -132,6 +208,11 @@
       }
       if (changes[STORAGE_KEYS.fullscreenOnly]) {
         renderFullscreenOnly(changes[STORAGE_KEYS.fullscreenOnly].newValue);
+      }
+      if (changes[STORAGE_KEYS.offsetX] || changes[STORAGE_KEYS.offsetY]) {
+        chrome.storage.local.get([STORAGE_KEYS.offsetX, STORAGE_KEYS.offsetY], function (r) {
+          renderOffset(Number(r[STORAGE_KEYS.offsetX]) || 0, Number(r[STORAGE_KEYS.offsetY]) || 0);
+        });
       }
     };
     chrome.storage.onChanged.addListener(onStorageChanged);

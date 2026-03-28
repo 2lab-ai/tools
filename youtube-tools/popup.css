@@ -180,6 +180,81 @@ body {
   accent-color: #fff;
 }
 
+/* ── Fit presets ── */
+.fit-presets {
+  margin-top: 4px;
+}
+
+/* ── Offset pad ── */
+.offset-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.offset-pad {
+  flex: 1;
+  aspect-ratio: 16 / 9;
+  background:
+    linear-gradient(to right, transparent calc(50% - .5px), #333 calc(50% - .5px), #333 calc(50% + .5px), transparent calc(50% + .5px)),
+    linear-gradient(to bottom, transparent calc(50% - .5px), #333 calc(50% - .5px), #333 calc(50% + .5px), transparent calc(50% + .5px)),
+    #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  position: relative;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.offset-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 4px rgba(0, 0, 0, .5);
+}
+
+.offset-reset {
+  padding: 6px 10px;
+  font-size: 11px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background: none;
+  color: #888;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+  white-space: nowrap;
+}
+
+.offset-reset:hover {
+  border-color: #555;
+  color: #ccc;
+}
+
+/* ── About ── */
+.about {
+  text-align: center;
+  padding: 24px 0;
+}
+
+.about a {
+  color: #888;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.about a:hover {
+  color: #fff;
+}
+
 /* ── Placeholder ── */
 .placeholder {
   text-align: center;
