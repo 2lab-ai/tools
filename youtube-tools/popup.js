@@ -256,14 +256,15 @@
       });
     });
 
-    // Block current domain
+    // Block current domain — write directly to storage (no background dependency)
     blockBtn.addEventListener("click", function () {
       if (!currentDomain) return;
-      chrome.runtime.sendMessage({ type: "GET_BLOCKED" }, function (res) {
-        var list = res.blocked || [];
+      chrome.storage.local.get("blockedDomains", function (res) {
+        var list = res.blockedDomains || [];
         if (!list.includes(currentDomain)) {
           list.push(currentDomain);
-          chrome.runtime.sendMessage({ type: "SET_BLOCKED", blockedList: list }, function () {
+          chrome.storage.local.set({ blockedDomains: list }, function () {
+            console.log("[Popup] blocked:", currentDomain, "list:", list);
             blockBtn.style.display = "none";
             relaxControls.style.display = "";
           });
@@ -271,26 +272,33 @@
       });
     });
 
-    // Relax mode buttons
+    // Relax mode buttons — write directly to storage + notify background for icon
     relaxButtons.forEach(function (btn) {
       btn.addEventListener("click", function () {
         var mins = parseInt(this.getAttribute("data-minutes"), 10);
-        chrome.runtime.sendMessage({ type: "START_RELAX", duration: mins }, function () {
+        var until = Date.now() + mins * 60000;
+        chrome.storage.local.set({ relaxModeUntil: until }, function () {
+          console.log("[Popup] relax started:", mins, "min");
           updateBlockUI();
         });
+        try { chrome.runtime.sendMessage({ type: "START_RELAX", duration: mins }); } catch (e) {}
       });
     });
 
-    // Stop relax
+    // Stop relax — write directly to storage
     stopRelaxBtn.addEventListener("click", function () {
-      chrome.runtime.sendMessage({ type: "STOP_RELAX" }, function () {
+      chrome.storage.local.set({ relaxModeUntil: 0 }, function () {
+        console.log("[Popup] relax stopped");
         updateBlockUI();
       });
+      try { chrome.runtime.sendMessage({ type: "STOP_RELAX" }); } catch (e) {}
     });
 
     // Manage blocked sites
     manageBtn.addEventListener("click", function () {
-      chrome.runtime.openOptionsPage();
+      try { chrome.runtime.openOptionsPage(); } catch (e) {
+        chrome.tabs.create({ url: chrome.runtime.getURL("options.html") });
+      }
     });
 
     function updateBlockUI() {

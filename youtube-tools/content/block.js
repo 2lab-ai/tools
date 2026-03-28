@@ -1,131 +1,124 @@
 "use strict";
 
 (function relaxBlock() {
+  console.log("[Block] content script loaded:", location.hostname);
+
   var blocked = false;
   var relaxMode = false;
   var blockOverlay = null;
   var mediaObserver = null;
-  var mutedElements = new WeakSet();
+
+  function getDomain() {
+    return location.hostname.replace(/^www\./, "");
+  }
 
   function recheckDomain() {
-    var domain = location.hostname.replace("www.", "");
+    var domain = getDomain();
     chrome.storage.local.get(["blockedDomains", "relaxModeUntil"], function (res) {
+      if (chrome.runtime.lastError) {
+        console.error("[Block] storage error:", chrome.runtime.lastError);
+        return;
+      }
       var now = Date.now();
       var prevRelax = relaxMode;
-      relaxMode = res.relaxModeUntil && now < res.relaxModeUntil;
-      var isBlocked =
-        Array.isArray(res.blockedDomains) &&
-        res.blockedDomains.includes(domain) &&
-        !relaxMode;
+      relaxMode = !!(res.relaxModeUntil && now < res.relaxModeUntil);
+      var inList = Array.isArray(res.blockedDomains) && res.blockedDomains.includes(domain);
+      var isBlocked = inList && !relaxMode;
 
-      if (prevRelax && !relaxMode && res.blockedDomains && res.blockedDomains.includes(domain)) {
+      if (prevRelax && !relaxMode && inList) {
+        console.log("[Block] relax expired, re-blocking:", domain);
         blockPage();
       } else if (isBlocked && !blocked) {
+        console.log("[Block] BLOCKING:", domain);
         blockPage();
       } else if (!isBlocked && blocked) {
+        console.log("[Block] UNBLOCKING:", domain);
         unblockPage();
-      } else if (isBlocked && blocked) {
-        if (!blockOverlay || !document.body || !document.body.contains(blockOverlay)) {
-          blockPage();
-        }
+      } else if (isBlocked && blocked && (!blockOverlay || !document.body || !document.body.contains(blockOverlay))) {
+        console.log("[Block] re-applying overlay:", domain);
+        blockPage();
       }
     });
   }
 
   function blockPage() {
     blocked = true;
-    document.documentElement.style.cssText =
-      "filter: grayscale(100%) !important; pointer-events: none !important; user-select: none !important;";
 
-    if (document.body) {
-      document.body.addEventListener("click", stopEvent, true);
-      document.body.addEventListener("keydown", stopEvent, true);
-      document.body.addEventListener("wheel", stopEvent, { capture: true, passive: false });
-      document.body.addEventListener("mousedown", stopEvent, true);
+    // Grayscale on html element (works even before body exists)
+    document.documentElement.style.setProperty("filter", "grayscale(100%)", "important");
+    document.documentElement.style.setProperty("pointer-events", "none", "important");
+    document.documentElement.style.setProperty("user-select", "none", "important");
 
-      if (blockOverlay) blockOverlay.remove();
-      blockOverlay = document.createElement("div");
-      blockOverlay.textContent = "This site is blocked. (Double-click to open options)";
-      blockOverlay.style.cssText =
-        "position:fixed!important;top:0!important;left:0!important;width:100vw!important;height:100vh!important;" +
-        "display:flex!important;align-items:center!important;justify-content:center!important;" +
-        "font-size:24px!important;background:rgba(0,0,0,.3)!important;color:#fff!important;" +
-        "text-align:center!important;z-index:2147483647!important;pointer-events:auto!important;cursor:pointer!important;";
+    if (!document.body) return; // will retry on DOMContentLoaded / interval
 
-      blockOverlay.addEventListener("dblclick", function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        chrome.runtime.sendMessage({ type: "OPEN_OPTIONS" });
-      }, true);
+    document.body.addEventListener("click", stopEvent, true);
+    document.body.addEventListener("keydown", stopEvent, true);
+    document.body.addEventListener("wheel", stopEvent, { capture: true, passive: false });
+    document.body.addEventListener("mousedown", stopEvent, true);
 
-      document.body.appendChild(blockOverlay);
-      muteAllMedia();
-    }
+    if (blockOverlay) blockOverlay.remove();
+    blockOverlay = document.createElement("div");
+    blockOverlay.textContent = "This site is blocked by Toolbox for Brain";
+    blockOverlay.style.cssText = [
+      "position:fixed", "top:0", "left:0", "width:100vw", "height:100vh",
+      "display:flex", "align-items:center", "justify-content:center",
+      "font-size:22px", "font-family:-apple-system,sans-serif", "font-weight:500",
+      "background:rgba(0,0,0,.4)", "color:rgba(255,255,255,.8)",
+      "text-align:center", "z-index:2147483647",
+      "pointer-events:auto", "cursor:default",
+    ].join("!important;") + "!important;";
+
+    blockOverlay.addEventListener("dblclick", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      try { chrome.runtime.sendMessage({ type: "OPEN_OPTIONS" }); } catch (err) {}
+    }, true);
+
+    document.body.appendChild(blockOverlay);
+    console.log("[Block] overlay appended to body");
+    muteAllMedia();
   }
 
   function unblockPage() {
     blocked = false;
-    document.documentElement.style.cssText = "";
+    document.documentElement.style.removeProperty("filter");
+    document.documentElement.style.removeProperty("pointer-events");
+    document.documentElement.style.removeProperty("user-select");
     if (document.body) {
       document.body.removeEventListener("click", stopEvent, true);
       document.body.removeEventListener("keydown", stopEvent, true);
       document.body.removeEventListener("wheel", stopEvent, { capture: true });
       document.body.removeEventListener("mousedown", stopEvent, true);
     }
-    if (blockOverlay) {
-      blockOverlay.remove();
-      blockOverlay = null;
-    }
-    if (mediaObserver) {
-      mediaObserver.disconnect();
-      mediaObserver = null;
-    }
+    if (blockOverlay) { blockOverlay.remove(); blockOverlay = null; }
+    if (mediaObserver) { mediaObserver.disconnect(); mediaObserver = null; }
   }
 
-  function stopEvent(e) {
-    e.stopPropagation();
-    e.preventDefault();
-  }
+  function stopEvent(e) { e.stopPropagation(); e.preventDefault(); }
 
   function muteAllMedia() {
-    document.querySelectorAll("audio, video").forEach(function (m) {
-      m.muted = true;
-      m.pause();
-      mutedElements.add(m);
-    });
+    var sel = "audio, video";
+    document.querySelectorAll(sel).forEach(function (m) { m.muted = true; m.pause(); });
     if (mediaObserver) mediaObserver.disconnect();
-    mediaObserver = new MutationObserver(function (mutations) {
-      mutations.forEach(function (mut) {
-        mut.addedNodes.forEach(function (node) {
-          if (node.nodeName === "AUDIO" || node.nodeName === "VIDEO") {
-            node.muted = true;
-            node.pause();
-          }
-          if (node.querySelectorAll) {
-            node.querySelectorAll("audio, video").forEach(function (m) {
-              m.muted = true;
-              m.pause();
-            });
-          }
+    mediaObserver = new MutationObserver(function (muts) {
+      muts.forEach(function (mut) {
+        mut.addedNodes.forEach(function (n) {
+          if (n.nodeName === "AUDIO" || n.nodeName === "VIDEO") { n.muted = true; n.pause(); }
+          if (n.querySelectorAll) n.querySelectorAll(sel).forEach(function (m) { m.muted = true; m.pause(); });
         });
       });
     });
-    if (document.body) {
-      mediaObserver.observe(document.body, { childList: true, subtree: true });
-    }
+    if (document.body) mediaObserver.observe(document.body, { childList: true, subtree: true });
   }
 
-  // Init — at document_start body may not exist yet, retry on DOM ready
+  // ── Init ──
   recheckDomain();
-
-  document.addEventListener("DOMContentLoaded", function () {
-    recheckDomain();
-  });
-
+  document.addEventListener("DOMContentLoaded", recheckDomain);
   window.addEventListener("load", recheckDomain);
 
   chrome.storage.onChanged.addListener(function (changes) {
-    if (changes.relaxModeUntil || changes.blockedDomains) {
+    if (changes.blockedDomains || changes.relaxModeUntil) {
+      console.log("[Block] storage changed, rechecking");
       recheckDomain();
     }
   });

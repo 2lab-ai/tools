@@ -34,13 +34,13 @@ function renderList(blocked) {
 }
 
 function loadBlocked() {
-  chrome.runtime.sendMessage({ type: "GET_BLOCKED" }, function (res) {
-    renderList(res.blocked || []);
+  chrome.storage.local.get("blockedDomains", function (res) {
+    renderList(res.blockedDomains || []);
   });
 }
 
 function saveBlocked(blocked) {
-  chrome.runtime.sendMessage({ type: "SET_BLOCKED", blockedList: blocked }, function () {
+  chrome.storage.local.set({ blockedDomains: blocked }, function () {
     renderList(blocked);
   });
 }
@@ -48,8 +48,8 @@ function saveBlocked(blocked) {
 addBtn.addEventListener("click", function () {
   var domain = domainInput.value.trim();
   if (!domain) return;
-  chrome.runtime.sendMessage({ type: "GET_BLOCKED" }, function (res) {
-    var list = res.blocked || [];
+  chrome.storage.local.get("blockedDomains", function (res) {
+    var list = res.blockedDomains || [];
     if (!list.includes(domain)) list.push(domain);
     saveBlocked(list);
     domainInput.value = "";
@@ -61,8 +61,8 @@ domainInput.addEventListener("keydown", function (e) {
 });
 
 exportBtn.addEventListener("click", function () {
-  chrome.runtime.sendMessage({ type: "GET_BLOCKED" }, function (res) {
-    var blob = new Blob([JSON.stringify(res.blocked || [], null, 2)], { type: "application/json" });
+  chrome.storage.local.get("blockedDomains", function (res) {
+    var blob = new Blob([JSON.stringify(res.blockedDomains || [], null, 2)], { type: "application/json" });
     var url = URL.createObjectURL(blob);
     var a = document.createElement("a");
     a.href = url;
