@@ -14,18 +14,26 @@
   // ── Tab switching ──
 
   function initTabs() {
-    const tabs = document.querySelectorAll(".tab");
+    var tabs = document.querySelectorAll(".tab");
+    function activateTab(name) {
+      tabs.forEach(function (t) { t.classList.remove("active"); });
+      document.querySelectorAll(".tab-content").forEach(function (c) { c.classList.remove("active"); });
+      var btn = document.querySelector('.tab[data-tab="' + name + '"]');
+      if (btn && !btn.disabled) {
+        btn.classList.add("active");
+        document.getElementById("tab-" + name).classList.add("active");
+      }
+    }
     tabs.forEach(function (tab) {
       tab.addEventListener("click", function () {
         if (this.disabled) return;
-        const target = this.getAttribute("data-tab");
-        tabs.forEach(function (t) { t.classList.remove("active"); });
-        document.querySelectorAll(".tab-content").forEach(function (c) {
-          c.classList.remove("active");
-        });
-        this.classList.add("active");
-        document.getElementById("tab-" + target).classList.add("active");
+        var target = this.getAttribute("data-tab");
+        activateTab(target);
+        chrome.storage.local.set({ popup_lastTab: target });
       });
+    });
+    chrome.storage.local.get("popup_lastTab", function (res) {
+      if (res.popup_lastTab) activateTab(res.popup_lastTab);
     });
   }
 
