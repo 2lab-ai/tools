@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Tools",
+  "version": "0.1.0",
+  "description": "YouTube utility toolkit — video resize, shorts blocker, and more.",
+  "icons": {
+    "16": "icons/icon16.svg",
+    "48": "icons/icon48.svg",
+    "128": "icons/icon128.svg"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.svg",
+      "48": "icons/icon48.svg",
+      "128": "icons/icon128.svg"
+    }
+  },
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": ["*://www.youtube.com/*"],
+      "js": ["content/resize.js"],
+      "all_frames": false
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "zoom_in": {
+      "suggested_key": { "default": "Ctrl+Shift+Up", "mac": "Command+Shift+Up" },
+      "description": "Increase zoom"
+    },
+    "zoom_out": {
+      "suggested_key": { "default": "Ctrl+Shift+Down", "mac": "Command+Shift+Down" },
+      "description": "Decrease zoom"
+    }
+  }
+}

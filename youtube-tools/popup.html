@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>YouTube Tools</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <nav class="tabs">
+    <button class="tab active" data-tab="resize">Resize</button>
+    <button class="tab" data-tab="shorts" disabled title="Coming soon">Shorts</button>
+  </nav>
+
+  <main>
+    <section id="tab-resize" class="tab-content active">
+      <div class="control-group">
+        <label class="control-label">Mode</label>
+        <div class="segmented">
+          <input type="radio" id="modeOff" name="mode" value="off">
+          <label for="modeOff">Off</label>
+          <input type="radio" id="modeZoom" name="mode" value="zoom">
+          <label for="modeZoom">Zoom</label>
+          <input type="radio" id="modeStretch" name="mode" value="stretch">
+          <label for="modeStretch">Stretch</label>
+        </div>
+      </div>
+
+      <div id="scaleControls" class="control-group">
+        <label class="control-label">
+          Scale <span id="scaleValue">1.00x</span>
+        </label>
+        <input id="scaleSlider" type="range" min="1.00" max="2.00" step="0.01" value="1.00">
+        <div class="presets">
+          <button data-scale="1.00">16:9</button>
+          <button data-scale="1.13">18:9</button>
+          <button data-scale="1.31">21:9</button>
+          <button data-scale="1.50">24:9</button>
+          <button data-scale="2.00">32:9</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="toggle">
+          <input type="checkbox" id="fullscreenOnly" checked>
+          <span>Fullscreen only</span>
+        </label>
+      </div>
+    </section>
+
+    <section id="tab-shorts" class="tab-content">
+      <p class="placeholder">Coming soon</p>
+    </section>
+  </main>
+
+  <script src="popup.js"></script>
+</body>
+</html>
