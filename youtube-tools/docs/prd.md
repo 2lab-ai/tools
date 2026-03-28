@@ -1,26 +1,29 @@
-# YouTube Tools — Product Requirements Document
+# Toolbox for Brain — Product Requirements Document
 
-Chrome extension for YouTube video viewing customization.
+Digital wellbeing Chrome extension — video customization + site blocking.
 
 ## Overview
 
 | Item | Value |
 |------|-------|
-| Name | YouTube Tools |
-| Version | 0.1.0 |
+| Name | Toolbox for Brain |
+| Version | 0.2.0 |
 | Platform | Chrome Extension (Manifest V3) |
-| Target site | youtube.com |
+| Target | youtube.com (VidFit), all URLs (Block) |
 | Publisher | [2lab.ai](https://2lab.ai) |
+| Source | [icedac/relaxblock](https://github.com/icedac/relaxblock) (Block feature) |
 
 ## Architecture
 
 ```
-popup.html/js/css   — Extension popup UI (settings panel)
-background.js       — Service worker (keyboard shortcuts, install defaults)
-content/resize.js   — Content script injected into YouTube pages
+popup.html/js/css   — Extension popup UI (tabbed settings panel)
+background.js       — Service worker (keyboard shortcuts, relax timer, messaging)
+content/resize.js   — Content script for YouTube (VidFit transforms)
+content/block.js    — Content script for all URLs (domain blocking)
+options.html/js     — Blocked domains management page
 ```
 
-Settings are persisted via `chrome.storage.local` and shared across all components via storage change listeners. The content script applies transforms through an injected `<style>` element (not inline styles) to prevent YouTube's own JS from resetting the values.
+Settings are persisted via `chrome.storage.local` and shared across all components via storage change listeners.
 
 ---
 
@@ -105,9 +108,48 @@ Floating controls injected into `#movie_player` for use during fullscreen when t
 
 ---
 
-## Tab: Shorts
+## Tab: Block
 
-Placeholder. Coming soon.
+Domain blocking with timed relaxation. Adapted from [icedac/relaxblock](https://github.com/icedac/relaxblock).
+
+### Domain Blocking
+
+- **Block Current Domain**: One-click block of the active tab's domain
+- **Visual feedback**: Blocked sites get grayscale filter + "This site is blocked" overlay
+- **Interaction blocking**: All clicks, scrolls, keyboard events suppressed
+- **Media blocking**: All audio/video elements muted and paused
+- **iframe support**: Blocking applies to all frames
+
+### Relax Mode
+
+Temporarily unblock all blocked sites for a set duration.
+
+| Button | Duration |
+|--------|----------|
+| 5m | 5 minutes |
+| 10m | 10 minutes |
+| 15m | 15 minutes |
+| 30m | 30 minutes |
+| 60m | 60 minutes |
+
+- **Countdown**: Digital timer shown in popup and extension icon
+- **Auto re-block**: When timer expires, blocking resumes automatically
+- **Stop button**: Cancel relax mode early
+- **Context menu**: Right-click "Relax Mode" with remaining time
+
+### Manage Blocked Sites
+
+Options page (opens in new tab):
+- Add/remove domains
+- Export blocked list as JSON
+- Import blocked list from JSON file
+
+### Storage Keys
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `blockedDomains` | `string[]` | `[]` | List of blocked domain strings |
+| `relaxModeUntil` | `number` | `0` | Unix timestamp when relax mode expires |
 
 ---
 

@@ -255,6 +255,69 @@ body {
   color: #fff;
 }
 
+/* ── Block tab ── */
+.block-action-btn {
+  width: 100%;
+  padding: 9px 0;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: none;
+  color: #888;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+}
+
+.block-action-btn:hover {
+  border-color: #555;
+  color: #ccc;
+}
+
+.block-primary {
+  border-color: #c33;
+  color: #e66;
+}
+
+.block-primary:hover {
+  background: #c33;
+  color: #fff;
+}
+
+.block-danger {
+  border-color: #c33;
+  color: #e66;
+  margin-top: 8px;
+}
+
+.block-danger:hover {
+  background: #c33;
+  color: #fff;
+}
+
+.block-secondary {
+  border-color: #333;
+  color: #666;
+}
+
+.countdown {
+  margin-top: 10px;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: #fff;
+  text-align: center;
+  min-height: 40px;
+}
+
+.block-domain-label {
+  font-size: 11px;
+  color: #666;
+  text-align: center;
+  margin-top: 4px;
+}
+
 /* ── Placeholder ── */
 .placeholder {
   text-align: center;

@@ -2,17 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>YouTube Tools</title>
+  <title>Toolbox for Brain</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <nav class="tabs">
     <button class="tab active" data-tab="resize">VidFit</button>
-    <button class="tab" data-tab="shorts" disabled title="Coming soon">Shorts</button>
+    <button class="tab" data-tab="block">Block</button>
     <button class="tab" data-tab="about">About</button>
   </nav>
 
   <main>
+    <!-- VidFit Tab -->
     <section id="tab-resize" class="tab-content active">
       <div class="control-group">
         <label class="control-label">Mode</label>
@@ -62,10 +63,37 @@
       </div>
     </section>
 
-    <section id="tab-shorts" class="tab-content">
-      <p class="placeholder">Coming soon</p>
+    <!-- Block Tab -->
+    <section id="tab-block" class="tab-content">
+      <div class="control-group">
+        <button id="blockCurrentBtn" class="block-action-btn block-primary">
+          Block Current Domain
+        </button>
+      </div>
+
+      <div id="relaxControls" class="control-group" style="display:none">
+        <label class="control-label">Relax Mode</label>
+        <div class="presets">
+          <button class="relax-btn" data-minutes="5">5m</button>
+          <button class="relax-btn" data-minutes="10">10m</button>
+          <button class="relax-btn" data-minutes="15">15m</button>
+          <button class="relax-btn" data-minutes="30">30m</button>
+          <button class="relax-btn" data-minutes="60">60m</button>
+        </div>
+        <button id="stopRelaxBtn" class="block-action-btn block-danger" style="display:none">
+          Stop Relax Mode
+        </button>
+        <div id="relaxCountdown" class="countdown"></div>
+      </div>
+
+      <div class="control-group">
+        <button id="manageBlockedBtn" class="block-action-btn block-secondary">
+          Manage Blocked Sites
+        </button>
+      </div>
     </section>
 
+    <!-- About Tab -->
     <section id="tab-about" class="tab-content">
       <div class="about">
         <a href="https://2lab.ai" target="_blank" rel="noopener">2lab.ai</a>

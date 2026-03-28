@@ -221,8 +221,103 @@
     });
   }
 
+  // ── Block tab ──
+
+  function initBlock() {
+    var blockBtn = document.getElementById("blockCurrentBtn");
+    var relaxControls = document.getElementById("relaxControls");
+    var stopRelaxBtn = document.getElementById("stopRelaxBtn");
+    var relaxCountdown = document.getElementById("relaxCountdown");
+    var manageBtn = document.getElementById("manageBlockedBtn");
+    var relaxButtons = document.querySelectorAll(".relax-btn");
+
+    var currentDomain = "";
+
+    // Get current tab domain
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      if (!tabs || !tabs.length || !tabs[0].url) return;
+      try {
+        currentDomain = new URL(tabs[0].url).hostname.replace(/^www\./, "");
+        blockBtn.textContent = "Block — " + currentDomain;
+      } catch (e) {
+        blockBtn.textContent = "Block Current Domain";
+      }
+
+      // Check if already blocked
+      chrome.storage.local.get("blockedDomains", function (res) {
+        var list = res.blockedDomains || [];
+        if (list.includes(currentDomain)) {
+          blockBtn.style.display = "none";
+          relaxControls.style.display = "";
+        } else {
+          blockBtn.style.display = "";
+          relaxControls.style.display = "none";
+        }
+      });
+    });
+
+    // Block current domain
+    blockBtn.addEventListener("click", function () {
+      if (!currentDomain) return;
+      chrome.runtime.sendMessage({ type: "GET_BLOCKED" }, function (res) {
+        var list = res.blocked || [];
+        if (!list.includes(currentDomain)) {
+          list.push(currentDomain);
+          chrome.runtime.sendMessage({ type: "SET_BLOCKED", blockedList: list }, function () {
+            blockBtn.style.display = "none";
+            relaxControls.style.display = "";
+          });
+        }
+      });
+    });
+
+    // Relax mode buttons
+    relaxButtons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var mins = parseInt(this.getAttribute("data-minutes"), 10);
+        chrome.runtime.sendMessage({ type: "START_RELAX", duration: mins }, function () {
+          updateBlockUI();
+        });
+      });
+    });
+
+    // Stop relax
+    stopRelaxBtn.addEventListener("click", function () {
+      chrome.runtime.sendMessage({ type: "STOP_RELAX" }, function () {
+        updateBlockUI();
+      });
+    });
+
+    // Manage blocked sites
+    manageBtn.addEventListener("click", function () {
+      chrome.runtime.openOptionsPage();
+    });
+
+    function updateBlockUI() {
+      chrome.storage.local.get("relaxModeUntil", function (res) {
+        var until = res.relaxModeUntil || 0;
+        var remain = until - Date.now();
+        if (remain > 0) {
+          stopRelaxBtn.style.display = "";
+          relaxButtons.forEach(function (b) { b.style.display = "none"; });
+          var sec = Math.floor(remain / 1000);
+          var mm = String(Math.floor(sec / 60)).padStart(2, "0");
+          var ss = String(sec % 60).padStart(2, "0");
+          relaxCountdown.textContent = mm + ":" + ss;
+        } else {
+          stopRelaxBtn.style.display = "none";
+          relaxButtons.forEach(function (b) { b.style.display = ""; });
+          relaxCountdown.textContent = "";
+        }
+      });
+    }
+
+    setInterval(updateBlockUI, 1000);
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     initTabs();
     initResize();
+    initBlock();
   });
 })();
