@@ -2,16 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>YouTube Tools</title>
+  <title>Toolbox for Brain</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <nav class="tabs">
-    <button class="tab active" data-tab="resize">Resize</button>
-    <button class="tab" data-tab="shorts" disabled title="Coming soon">Shorts</button>
+    <button class="tab active" data-tab="resize">VidFit</button>
+    <button class="tab" data-tab="block">Block</button>
+    <button class="tab" data-tab="about">About</button>
   </nav>
 
   <main>
+    <!-- VidFit Tab -->
     <section id="tab-resize" class="tab-content active">
       <div class="control-group">
         <label class="control-label">Mode</label>
@@ -29,13 +31,26 @@
         <label class="control-label">
           Scale <span id="scaleValue">1.00x</span>
         </label>
-        <input id="scaleSlider" type="range" min="1.00" max="2.00" step="0.01" value="1.00">
+        <input id="scaleSlider" type="range" min="1.00" max="8.00" step="0.01" value="1.00">
         <div class="presets">
           <button data-scale="1.00">16:9</button>
           <button data-scale="1.13">18:9</button>
           <button data-scale="1.31">21:9</button>
           <button data-scale="1.50">24:9</button>
           <button data-scale="2.00">32:9</button>
+        </div>
+        <div class="presets fit-presets">
+          <button id="btnWideFit">WideFit</button>
+          <button id="btnHeightFit">TallFit</button>
+        </div>
+      </div>
+
+      <div id="offsetControls" class="control-group">
+        <label class="control-label">
+          Offset <button id="offsetReset" class="label-btn" title="Reset offset">Reset</button>
+        </label>
+        <div class="offset-pad" id="offsetPad">
+          <div class="offset-dot" id="offsetDot"></div>
         </div>
       </div>
 
@@ -47,8 +62,41 @@
       </div>
     </section>
 
-    <section id="tab-shorts" class="tab-content">
-      <p class="placeholder">Coming soon</p>
+    <!-- Block Tab -->
+    <section id="tab-block" class="tab-content">
+      <div class="control-group">
+        <button id="blockCurrentBtn" class="block-action-btn block-primary">
+          Block Current Domain
+        </button>
+      </div>
+
+      <div id="relaxControls" class="control-group" style="display:none">
+        <label class="control-label">Relax Mode</label>
+        <div class="presets">
+          <button class="relax-btn" data-minutes="5">5m</button>
+          <button class="relax-btn" data-minutes="10">10m</button>
+          <button class="relax-btn" data-minutes="15">15m</button>
+          <button class="relax-btn" data-minutes="30">30m</button>
+          <button class="relax-btn" data-minutes="60">60m</button>
+        </div>
+        <button id="stopRelaxBtn" class="block-action-btn block-danger" style="display:none">
+          Stop Relax Mode
+        </button>
+        <div id="relaxCountdown" class="countdown"></div>
+      </div>
+
+      <div class="control-group">
+        <button id="manageBlockedBtn" class="block-action-btn block-secondary">
+          Manage Blocked Sites
+        </button>
+      </div>
+    </section>
+
+    <!-- About Tab -->
+    <section id="tab-about" class="tab-content">
+      <div class="about">
+        <a href="https://2lab.ai" target="_blank" rel="noopener">2lab.ai</a>
+      </div>
     </section>
   </main>
 

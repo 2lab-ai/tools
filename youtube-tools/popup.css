@@ -180,6 +180,143 @@ body {
   accent-color: #fff;
 }
 
+/* ── Fit presets ── */
+.fit-presets {
+  margin-top: 4px;
+}
+
+/* ── Inline label button ── */
+.label-btn {
+  float: right;
+  padding: 1px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  border: 1px solid #333;
+  border-radius: 3px;
+  background: none;
+  color: #666;
+  cursor: pointer;
+  font-family: inherit;
+  text-transform: none;
+  letter-spacing: normal;
+  transition: all .15s;
+}
+
+.label-btn:hover {
+  border-color: #555;
+  color: #ccc;
+}
+
+/* ── Offset pad ── */
+.offset-pad {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background:
+    linear-gradient(to right, transparent calc(50% - .5px), #333 calc(50% - .5px), #333 calc(50% + .5px), transparent calc(50% + .5px)),
+    linear-gradient(to bottom, transparent calc(50% - .5px), #333 calc(50% - .5px), #333 calc(50% + .5px), transparent calc(50% + .5px)),
+    #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 6px;
+  position: relative;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.offset-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 4px rgba(0, 0, 0, .5);
+}
+
+
+/* ── About ── */
+.about {
+  text-align: center;
+  padding: 24px 0;
+}
+
+.about a {
+  color: #888;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.about a:hover {
+  color: #fff;
+}
+
+/* ── Block tab ── */
+.block-action-btn {
+  width: 100%;
+  padding: 9px 0;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: none;
+  color: #888;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+}
+
+.block-action-btn:hover {
+  border-color: #555;
+  color: #ccc;
+}
+
+.block-primary {
+  border-color: #c33;
+  color: #e66;
+}
+
+.block-primary:hover {
+  background: #c33;
+  color: #fff;
+}
+
+.block-danger {
+  border-color: #c33;
+  color: #e66;
+  margin-top: 8px;
+}
+
+.block-danger:hover {
+  background: #c33;
+  color: #fff;
+}
+
+.block-secondary {
+  border-color: #333;
+  color: #666;
+}
+
+.countdown {
+  margin-top: 10px;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: #fff;
+  text-align: center;
+  min-height: 40px;
+}
+
+.block-domain-label {
+  font-size: 11px;
+  color: #666;
+  text-align: center;
+  margin-top: 4px;
+}
+
 /* ── Placeholder ── */
 .placeholder {
   text-align: center;

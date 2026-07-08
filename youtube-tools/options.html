@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Blocked Domains — Toolbox for Brain</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #111; color: #e0e0e0; padding: 32px; max-width: 480px; margin: 0 auto; }
+    h1 { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #fff; }
+    .add-row { display: flex; gap: 8px; margin-bottom: 20px; }
+    .add-row input { flex: 1; padding: 8px 12px; background: #1a1a1a; border: 1px solid #333; border-radius: 6px; color: #e0e0e0; font-size: 13px; outline: none; }
+    .add-row input:focus { border-color: #555; }
+    .btn { padding: 8px 16px; border: 1px solid #333; border-radius: 6px; background: none; color: #888; cursor: pointer; font-size: 12px; font-family: inherit; transition: all .15s; }
+    .btn:hover { border-color: #555; color: #ccc; }
+    .btn-add { border-color: #fff; color: #fff; }
+    .btn-add:hover { background: #fff; color: #111; }
+    ul { list-style: none; }
+    li { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #1a1a1a; font-size: 13px; }
+    li:hover { background: #1a1a1a; }
+    .btn-remove { border-color: #c33; color: #e66; font-size: 11px; padding: 4px 10px; }
+    .btn-remove:hover { background: #c33; color: #fff; }
+    .actions { display: flex; gap: 8px; margin-top: 20px; }
+    .empty { color: #444; text-align: center; padding: 24px 0; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>Blocked Domains</h1>
+  <div class="add-row">
+    <input id="domainInput" type="text" placeholder="example.com">
+    <button id="addBtn" class="btn btn-add">Add</button>
+  </div>
+  <ul id="blockedList"></ul>
+  <div class="actions">
+    <button id="exportBtn" class="btn">Export</button>
+    <input id="importFile" type="file" accept=".json" style="display:none">
+    <button id="importBtn" class="btn">Import</button>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>
